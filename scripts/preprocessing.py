@@ -1,4 +1,26 @@
-# Preprocessing step
+"""
+Preprocessing module for Customer Churn Prediction
+
+This script defines all data preparation logic used in the project.
+It does NOT train models or transform data directly.
+
+Instead, it provides reusable functions to:
+- Load the raw churn dataset
+- Clean inconsistent or unusable features
+- Separate features (X) and target (y)
+- Define how categorical and numerical features should be processed
+- Split the data into stratified train/test sets
+
+The actual preprocessing (encoding, scaling) is executed later
+inside a scikit-learn Pipeline during model training.
+
+This design ensures:
+- No data leakage
+- Reproducible experiments
+- A single source of truth for preprocessing logic
+
+"""
+
 
 # Imports
 import pandas as pd
