@@ -104,7 +104,7 @@ plt.show()
 
 
 # ________________________________________________________________________________________
-# SHAP Explainablilty
+# SHAP Explainablilty (Global; basically which features influence the prediction the most. In my case I found it to be tenure)
 
 # Load the best model
 model = joblib.load("models/logistic_regression.pkl")
@@ -132,3 +132,37 @@ plt.savefig("reports/shap_summary_plot.png")
 plt.close()
 
 # ________________________________________________________________________________________
+# SHAP Local Explainability (Single Customer)
+
+"""
+Insight for customer 0:
+# The model's baseline churn score is around -0.65, meaning customers \
+# generally tend to stay. For customer 0, the final prediction drops to \
+# -2.93, far below the baseline, indicating a very low churn risk driven \
+# mainly by strong retention factors such as longer tenure and a long-term \
+# contract.”
+"""
+
+# Pick one customer from the test set
+sample_index = 0                                    # CHANGE THIS AS DESIRED
+sample = X_test.iloc[[sample_index]]    # get the sample
+
+# Transform sample using preprocessing
+sample_transformed = model.named_steps['preprocessing'].transform(sample)
+
+# Compute SHAP values for this instance
+shap_values_single = explainer.shap_values(sample_transformed)
+
+# Force plot (local explanation)
+shap.force_plot(
+    explainer.expected_value,
+    shap_values_single,
+    sample_transformed,
+    feature_names=model.named_steps['preprocessing'].get_feature_names_out(),
+    matplotlib=True,
+    show=False
+)
+
+plt.tight_layout()
+plt.savefig("reports/shap_local_force_plot.png")
+plt.close()
