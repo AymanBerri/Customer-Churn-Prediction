@@ -1,10 +1,31 @@
 # Here I will deeply analyze, then SHAP explainability which is a way to explain the output of any machine learning model
 # We evaluate the saved models, and then generate visuals, reports, insight, etc..
 
+"""
+This script evaluates multiple trained models on the churn dataset, providing:
+1. Classification metrics (precision, recall, F1-score) for each model.
+2. Confusion matrices for visual comparison of predictions.
+3. ROC curves + AUC to compare how well models distinguish churners from non-churners.
+4. SHAP explainability for the best model (Logistic Regression) to identify which features most influence churn predictions.
+
+
+Key Insight from SHAP
+
+Top predictors of churn:
+1. tenure → short-tenure customers are more likely to churn.
+2. Contract_Month-to-Month → month-to-month contracts increase churn risk.
+3. Contract_Two year → long-term contracts reduce churn risk.
+
+- Other features have smaller but non-negligible contributions.
+- Business takeaway: Focus retention efforts on new, month-to-month customers to reduce churn.
+
+"""
+
 
 
 # ________________________________________________________________________________________
 # Imports
+import os
 import joblib
 import matplotlib.pyplot as plt
 from sklearn.metrics import ConfusionMatrixDisplay, roc_curve, auc, classification_report
@@ -12,6 +33,8 @@ from preprocessing import load_data, clean_data, preprocess_features, split_data
 
 import shap
 
+
+os.makedirs("reports", exist_ok=True) # report folder to save visuals
 
 
 # ________________________________________________________________________________________
@@ -52,12 +75,14 @@ for i, model_file in enumerate(model_files, 1):
     ConfusionMatrixDisplay.from_estimator(model, X_test, y_test, ax=plt.gca(), colorbar=False) # Confusion matrix for the model
     plt.title(model_file.split('/')[-1])
 
+
     # Save ROC info for later
     fpr, tpr, _ = roc_curve(y_test, y_proba) # false positive, true positive
     roc_auc = auc(fpr, tpr)                 # area under curve
     roc_info[model_file.split('/')[-1]] = (fpr, tpr, roc_auc)   # saved this data in the dictionary to be created later
 
 plt.tight_layout()
+plt.savefig("reports/confusion_matrices.png")
 plt.show()
 
 
@@ -72,12 +97,15 @@ plt.xlabel("False Positive Rate")
 plt.ylabel("True Positive Rate")
 plt.title("ROC Curves for All Models")
 plt.legend()
-plt.show()
 
+plt.savefig("reports/roc_curves.png")
+
+plt.show()
 
 
 # ________________________________________________________________________________________
 # SHAP Explainablilty
+
 # Load the best model
 model = joblib.load("models/logistic_regression.pkl")
 
@@ -86,16 +114,21 @@ X_test_transformed = model.named_steps['preprocessing'].transform(X_test)
 
 # Create SHAP explainer for Logistic Regression
 explainer = shap.LinearExplainer(model.named_steps['classifier'], X_test_transformed, feature_perturbation="correlation_dependent")
-shap_values = explainer.shap_values(X_test_transformed)
+shap_values = explainer.shap_values(X_test_transformed) #how much each feature contributes to the prediction of each sample
 
-# ----------------------------
+
+
 # Global feature importance (summary plot)
-# ----------------------------
 shap.summary_plot(
     shap_values, 
     X_test_transformed, 
     feature_names=model.named_steps['preprocessing'].get_feature_names_out(),
-    plot_type="bar"
+    plot_type="bar",
+    show=False
 )
+
+plt.tight_layout()
+plt.savefig("reports/shap_summary_plot.png")
+plt.close()
 
 # ________________________________________________________________________________________
