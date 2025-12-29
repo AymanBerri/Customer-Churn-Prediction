@@ -105,6 +105,7 @@ plt.show()
 
 # ________________________________________________________________________________________
 # SHAP Explainablilty (Global; basically which features influence the prediction the most. In my case I found it to be tenure)
+# for: Importance + effect on predictions (positive/negative)
 
 # Load the best model
 model = joblib.load("models/logistic_regression.pkl")
@@ -166,3 +167,44 @@ shap.force_plot(
 plt.tight_layout()
 plt.savefig("reports/shap_local_force_plot.png")
 plt.close()
+
+
+
+
+
+# ________________________________________________________________________________________
+# Feature importance for Logistic Regression
+# for: Only importance ranking
+
+
+import numpy as np
+model = joblib.load("models/logistic_regression_tuned.pkl")
+
+# Get feature names after preprocessing
+feature_names = model.named_steps['preprocessing'].get_feature_names_out()
+
+# Get coefficients
+coef = model.named_steps['classifier'].coef_[0]
+
+# Sort features by absolute coefficient
+sorted_idx = np.argsort(np.abs(coef))[::-1]
+
+# Plot top 10 features
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(8,6))
+plt.barh([feature_names[i] for i in sorted_idx[:10]], coef[sorted_idx[:10]])
+plt.xlabel("Coefficient (Feature Importance)")
+plt.title("Top 10 Logistic Regression Feature Importances")
+plt.gca().invert_yaxis()
+plt.tight_layout()
+plt.savefig("reports/logreg_feature_importance.png")
+plt.show()
+
+
+
+"""
+For Logistic Regression, coefficients are a simple global feature importance, 
+while SHAP gives you the same idea but richer, including effect direction and 
+per-sample explanation.
+"""
