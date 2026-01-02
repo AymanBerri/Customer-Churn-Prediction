@@ -140,7 +140,7 @@ if __name__ == "__main__":
 
     print("\nPreprocessing features...")
     X, y, preprocessor = preprocess_features(df)
-    print("Feature sample:")
+    print("Raw feature sample (before encoding/scaling):")
     print(X.head())
     print("Target sample:")
     print(y.head())
@@ -148,3 +148,9 @@ if __name__ == "__main__":
     print("\nSplitting data...")
     X_train, X_test, y_train, y_test = split_data(X, y)
     print(f"Train shape: {X_train.shape}, Test shape: {X_test.shape}")
+
+    print("\nDemonstrating preprocessing (encoding + scaling) on train set...")
+    X_train_transformed = preprocessor.fit_transform(X_train)
+    print(f"Transformed train shape (one-hot encoded + scaled): {X_train_transformed.shape}")
+    print("Feature names after preprocessing:")
+    print(preprocessor.get_feature_names_out())
